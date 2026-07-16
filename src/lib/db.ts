@@ -16,19 +16,21 @@ import type {
   Booking,
   Review,
   ListingQuery,
+  PointsTransaction,
 } from "@/lib/types";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const SEED_DIR = path.join(DATA_DIR, "seed");
 const RUNTIME_DIR = path.join(DATA_DIR, "runtime");
 
-type EntityName = "users" | "listings" | "bookings" | "reviews";
+type EntityName = "users" | "listings" | "bookings" | "reviews" | "points";
 
 interface Schema {
   users: User[];
   listings: Listing[];
   bookings: Booking[];
   reviews: Review[];
+  points: PointsTransaction[];
 }
 
 const cache: Partial<Record<EntityName, unknown[]>> = {};

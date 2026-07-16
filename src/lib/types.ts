@@ -12,8 +12,28 @@ export interface User {
   createdAt: string;
 }
 
-export type ListingType = "hotel" | "activity";
+export type ListingType = "hotel" | "activity" | "transport";
 export type UnitLabel = "night" | "person";
+
+export type TransportMode = "flight" | "train" | "bus" | "ferry" | "transfer";
+
+/**
+ * Route/schedule metadata present iff `Listing.type === 'transport'`.
+ * When set, `Listing.city` mirrors `originCity` for search compatibility and
+ * `unitLabel` is `'person'`.
+ */
+export interface TransportInfo {
+  mode: TransportMode;
+  originCity: string;
+  originCode: string;
+  destinationCity: string;
+  destinationCode: string;
+  carrier: string;
+  serviceCode: string;
+  departureTime: string; // e.g. "08:30" or ISO
+  arrivalTime: string;
+  durationMinutes: number;
+}
 
 export interface Listing {
   id: string;
@@ -34,6 +54,8 @@ export interface Listing {
   featured: boolean;
   active: boolean;
   createdAt: string;
+  /** Present iff type === 'transport'. */
+  transport?: TransportInfo;
 }
 
 export type BookingStatus =
@@ -54,6 +76,33 @@ export interface Booking {
   status: BookingStatus;
   guestName: string;
   guestEmail: string;
+  createdAt: string;
+  /**
+   * Round 2 fields. Optional in the type for backward compatibility with old
+   * seed/runtime records; the db layer defaults them on read via
+   * `withBookingDefaults`, so callers can treat them as always present.
+   */
+  currency?: string; // display currency chosen at checkout; records stay USD
+  pointsRedeemed?: number; // points spent at checkout
+  discountCents?: number; // USD value of the redemption
+  pointsEarned?: number; // 0 until the booking is completed
+}
+
+/** Member points ledger entry. Balance = sum of all deltas for a user. */
+export type PointsReason =
+  | "earn"
+  | "redeem"
+  | "redeem-refund"
+  | "earn-revoke"
+  | "admin-adjust";
+
+export interface PointsTransaction {
+  id: string;
+  userId: string;
+  bookingId?: string;
+  delta: number; // integer, +earn / -redeem
+  reason: PointsReason;
+  note?: string;
   createdAt: string;
 }
 
@@ -85,4 +134,8 @@ export interface ListingQuery {
   sort?: ListingSort;
   featured?: boolean;
   activeOnly?: boolean;
+  // Transport filters (case-insensitive substring on transport route fields).
+  mode?: TransportMode;
+  origin?: string;
+  destination?: string;
 }
