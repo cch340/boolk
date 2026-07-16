@@ -1,34 +1,38 @@
 import Image from "next/image";
 import Link from "next/link";
 import { listings } from "@/lib/db";
+import { getCurrency, getLocale } from "@/lib/prefs";
+import { getDictionary, t, type MessageKey } from "@/lib/i18n";
 import { ListingCard } from "@/components/site/ListingCard";
 import { HomeSearch } from "@/components/site/HomeSearch";
 import { DESTINATIONS } from "./_lib/destinations";
 
-const VALUE_PROPS = [
+const VALUE_PROPS: { title: MessageKey; body: MessageKey; icon: string }[] = [
   {
-    title: "Best price guarantee",
-    body: "Transparent pricing in USD with no hidden fees at checkout.",
+    title: "home.value.price.title",
+    body: "home.value.price.desc",
     icon: "M12 1v22M5 5h9a4 4 0 010 8H7a4 4 0 000 8h10",
   },
   {
-    title: "Free cancellation",
-    body: "Plans change. Cancel most bookings in a couple of taps.",
-    icon: "M9 12l2 2 4-4M12 3a9 9 0 100 18 9 9 0 000-18z",
-  },
-  {
-    title: "Handpicked stays",
-    body: "Curated hotels and experiences across top destinations.",
+    title: "home.value.choice.title",
+    body: "home.value.choice.desc",
     icon: "M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z",
   },
   {
-    title: "24/7 support",
-    body: "Real help whenever your trip needs it, day or night.",
+    title: "home.value.trust.title",
+    body: "home.value.trust.desc",
+    icon: "M9 12l2 2 4-4M12 3a9 9 0 100 18 9 9 0 000-18z",
+  },
+  {
+    title: "home.value.support.title",
+    body: "home.value.support.desc",
     icon: "M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0",
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [locale, currency] = await Promise.all([getLocale(), getCurrency()]);
+  const dict = getDictionary(locale);
   const featured = listings.featured(8);
 
   return (
@@ -47,14 +51,13 @@ export default function HomePage() {
         </div>
         <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
           <h1 className="max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-5xl">
-            Find your next stay & experience
+            {t(dict, "home.hero.title")}
           </h1>
           <p className="mt-3 max-w-xl text-base text-brand-100 sm:text-lg">
-            Book hotels and activities across Tokyo, Bangkok, Bali, Paris and
-            beyond — all in one place.
+            {t(dict, "home.hero.subtitle")}
           </p>
           <div className="mt-8 max-w-4xl">
-            <HomeSearch />
+            <HomeSearch locale={locale} />
           </div>
         </div>
       </section>
@@ -64,37 +67,40 @@ export default function HomePage() {
         <div className="flex items-end justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-900">
-              Featured stays & experiences
+              {t(dict, "home.featured.title")}
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Handpicked favourites travellers love.
+              {t(dict, "home.featured.subtitle")}
             </p>
           </div>
           <Link
             href="/search"
             className="hidden text-sm font-medium text-brand-700 hover:text-brand-800 sm:block"
           >
-            View all →
+            {t(dict, "home.viewAll")} →
           </Link>
         </div>
-        {featured.length > 0 ? (
+        {featured.length > 0 && (
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {featured.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                locale={locale}
+                currency={currency}
+              />
             ))}
           </div>
-        ) : (
-          <p className="mt-6 text-slate-500">No featured listings yet.</p>
         )}
       </section>
 
       {/* Popular destinations */}
       <section className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
         <h2 className="text-2xl font-bold text-slate-900">
-          Popular destinations
+          {t(dict, "home.destinations.title")}
         </h2>
         <p className="mt-1 text-sm text-slate-500">
-          Explore the cities travellers are booking right now.
+          {t(dict, "home.destinations.subtitle")}
         </p>
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {DESTINATIONS.map((dest) => (
@@ -138,8 +144,10 @@ export default function HomePage() {
                   <path d={prop.icon} />
                 </svg>
               </span>
-              <h3 className="font-semibold text-slate-900">{prop.title}</h3>
-              <p className="text-sm text-slate-500">{prop.body}</p>
+              <h3 className="font-semibold text-slate-900">
+                {t(dict, prop.title)}
+              </h3>
+              <p className="text-sm text-slate-500">{t(dict, prop.body)}</p>
             </div>
           ))}
         </div>

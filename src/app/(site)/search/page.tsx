@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { listings } from "@/lib/db";
+import { getCurrency, getLocale } from "@/lib/prefs";
+import { getDictionary, t, type MessageKey } from "@/lib/i18n";
 import { ListingCard } from "@/components/site/ListingCard";
 import {
   SearchFilters,
@@ -14,12 +16,23 @@ function str(value: string | string[] | undefined): string {
   return value ?? "";
 }
 
+const HEADING_KEY: Record<string, MessageKey> = {
+  hotel: "nav.hotels",
+  activity: "nav.activities",
+  transport: "nav.transport",
+};
+
 export default async function SearchPage({
   searchParams,
 }: {
   searchParams: Promise<RawParams>;
 }) {
-  const params = await searchParams;
+  const [params, locale, currency] = await Promise.all([
+    searchParams,
+    getLocale(),
+    getCurrency(),
+  ]);
+  const dict = getDictionary(locale);
   const query = parseListingQuery(params);
   const results = listings.search(query);
 
@@ -30,32 +43,38 @@ export default async function SearchPage({
     maxPrice: str(params.maxPrice),
     minRating: str(params.minRating),
     sort: str(params.sort),
+    mode: str(params.mode),
+    origin: str(params.origin),
+    destination: str(params.destination),
   };
 
   const heading = query.type
-    ? query.type === "hotel"
-      ? "Hotels"
-      : "Activities"
-    : "All listings";
+    ? t(dict, HEADING_KEY[query.type])
+    : t(dict, "search.allListings");
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">{heading}</h1>
         <p className="mt-1 text-sm text-slate-500">
-          {results.length} result{results.length === 1 ? "" : "s"}
-          {query.q ? ` for “${query.q}”` : ""}
+          {t(dict, "search.resultsCount", { count: results.length })}
+          {query.q ? ` ${t(dict, "search.forQuery", { q: query.q })}` : ""}
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-        <SearchFilters initial={initial} />
+        <SearchFilters initial={initial} locale={locale} />
 
         <div>
           {results.length > 0 ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {results.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  locale={locale}
+                  currency={currency}
+                />
               ))}
             </div>
           ) : (
@@ -73,11 +92,10 @@ export default async function SearchPage({
                 </svg>
               </span>
               <h3 className="mt-4 font-semibold text-slate-900">
-                No listings found
+                {t(dict, "search.empty.title")}
               </h3>
               <p className="mt-1 max-w-sm text-sm text-slate-500">
-                Try widening your price range, lowering the rating filter, or
-                searching a different destination.
+                {t(dict, "search.empty.desc")}
               </p>
             </div>
           )}

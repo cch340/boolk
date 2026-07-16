@@ -1,10 +1,22 @@
 // Helpers to translate raw URL searchParams into a typed ListingQuery
 // for the /search server component.
 
-import type { ListingQuery, ListingSort, ListingType } from "@/lib/types";
+import type {
+  ListingQuery,
+  ListingSort,
+  ListingType,
+  TransportMode,
+} from "@/lib/types";
 
 const SORTS: readonly ListingSort[] = ["price-asc", "price-desc", "rating"];
-const TYPES: readonly ListingType[] = ["hotel", "activity"];
+const TYPES: readonly ListingType[] = ["hotel", "activity", "transport"];
+const MODES: readonly TransportMode[] = [
+  "flight",
+  "train",
+  "bus",
+  "ferry",
+  "transfer",
+];
 
 export type RawParams = Record<string, string | string[] | undefined>;
 
@@ -28,6 +40,7 @@ export function dollarsToCents(value: string | undefined): number | undefined {
 export function parseListingQuery(params: RawParams): ListingQuery {
   const type = one(params.type);
   const sort = one(params.sort);
+  const mode = one(params.mode);
   const minRating = toNumber(one(params.minRating));
 
   return {
@@ -43,5 +56,11 @@ export function parseListingQuery(params: RawParams): ListingQuery {
       sort && SORTS.includes(sort as ListingSort)
         ? (sort as ListingSort)
         : undefined,
+    mode:
+      mode && MODES.includes(mode as TransportMode)
+        ? (mode as TransportMode)
+        : undefined,
+    origin: one(params.origin)?.trim() || undefined,
+    destination: one(params.destination)?.trim() || undefined,
   };
 }

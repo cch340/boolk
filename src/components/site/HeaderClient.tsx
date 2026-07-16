@@ -6,10 +6,14 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import type { PublicUser } from "@/lib/types";
+import type { CurrencyCode } from "@/lib/currency";
+import { getDictionary, t, type Locale, type MessageKey } from "@/lib/i18n";
+import { PrefPicker } from "./PrefPicker";
 
-const NAV = [
-  { label: "Hotels", href: "/search?type=hotel" },
-  { label: "Activities", href: "/search?type=activity" },
+const NAV: { key: MessageKey; href: string }[] = [
+  { key: "nav.hotels", href: "/search?type=hotel" },
+  { key: "nav.activities", href: "/search?type=activity" },
+  { key: "nav.transport", href: "/search?type=transport" },
 ];
 
 function Logo() {
@@ -25,8 +29,17 @@ function Logo() {
   );
 }
 
-export function HeaderClient({ user }: { user: PublicUser | null }) {
+export function HeaderClient({
+  user,
+  locale,
+  currency,
+}: {
+  user: PublicUser | null;
+  locale: Locale;
+  currency: CurrencyCode;
+}) {
   const router = useRouter();
+  const dict = getDictionary(locale);
   const [menuOpen, setMenuOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -68,13 +81,14 @@ export function HeaderClient({ user }: { user: PublicUser | null }) {
               href={item.href}
               className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
             >
-              {item.label}
+              {t(dict, item.key)}
             </Link>
           ))}
         </nav>
 
         {/* Desktop right */}
         <div className="hidden items-center gap-2 md:flex">
+          <PrefPicker locale={locale} currency={currency} />
           {user ? (
             <div className="relative" ref={userRef}>
               <button
@@ -100,7 +114,7 @@ export function HeaderClient({ user }: { user: PublicUser | null }) {
                     onClick={() => setUserOpen(false)}
                     className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                   >
-                    My bookings
+                    {t(dict, "nav.myBookings")}
                   </Link>
                   {user.role === "admin" && (
                     <Link
@@ -109,7 +123,7 @@ export function HeaderClient({ user }: { user: PublicUser | null }) {
                       onClick={() => setUserOpen(false)}
                       className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                     >
-                      Admin portal
+                      {t(dict, "nav.adminPortal")}
                     </Link>
                   )}
                   <button
@@ -119,7 +133,7 @@ export function HeaderClient({ user }: { user: PublicUser | null }) {
                     disabled={loggingOut}
                     className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
                   >
-                    Log out
+                    {t(dict, "nav.signOut")}
                   </button>
                 </div>
               )}
@@ -128,11 +142,11 @@ export function HeaderClient({ user }: { user: PublicUser | null }) {
             <>
               <Link href="/login">
                 <Button variant="ghost" size="sm">
-                  Log in
+                  {t(dict, "nav.logIn")}
                 </Button>
               </Link>
               <Link href="/register">
-                <Button size="sm">Sign up</Button>
+                <Button size="sm">{t(dict, "nav.register")}</Button>
               </Link>
             </>
           )}
@@ -142,7 +156,7 @@ export function HeaderClient({ user }: { user: PublicUser | null }) {
         <button
           type="button"
           className="inline-flex items-center justify-center rounded-lg p-2 text-slate-700 hover:bg-slate-100 md:hidden"
-          aria-label="Toggle menu"
+          aria-label={t(dict, "nav.menu")}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((v) => !v)}
         >
@@ -171,7 +185,7 @@ export function HeaderClient({ user }: { user: PublicUser | null }) {
               onClick={() => setMenuOpen(false)}
               className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
             >
-              {item.label}
+              {t(dict, item.key)}
             </Link>
           ))}
           <div className="my-2 border-t border-slate-100" />
@@ -185,7 +199,7 @@ export function HeaderClient({ user }: { user: PublicUser | null }) {
                 onClick={() => setMenuOpen(false)}
                 className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
               >
-                My bookings
+                {t(dict, "nav.myBookings")}
               </Link>
               {user.role === "admin" && (
                 <Link
@@ -193,7 +207,7 @@ export function HeaderClient({ user }: { user: PublicUser | null }) {
                   onClick={() => setMenuOpen(false)}
                   className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
                 >
-                  Admin portal
+                  {t(dict, "nav.adminPortal")}
                 </Link>
               )}
               <button
@@ -202,21 +216,23 @@ export function HeaderClient({ user }: { user: PublicUser | null }) {
                 disabled={loggingOut}
                 className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
               >
-                Log out
+                {t(dict, "nav.signOut")}
               </button>
             </>
           ) : (
             <div className="flex flex-col gap-2 px-1 pt-1">
               <Link href="/login" onClick={() => setMenuOpen(false)}>
                 <Button variant="outline" fullWidth>
-                  Log in
+                  {t(dict, "nav.logIn")}
                 </Button>
               </Link>
               <Link href="/register" onClick={() => setMenuOpen(false)}>
-                <Button fullWidth>Sign up</Button>
+                <Button fullWidth>{t(dict, "nav.register")}</Button>
               </Link>
             </div>
           )}
+          <div className="my-2 border-t border-slate-100" />
+          <PrefPicker locale={locale} currency={currency} variant="menu" />
         </nav>
       </div>
     </header>

@@ -1,33 +1,40 @@
 import Link from "next/link";
+import { getLocale } from "@/lib/prefs";
+import { getDictionary, t, type MessageKey } from "@/lib/i18n";
 
-const COLUMNS = [
+const COLUMNS: { title: MessageKey; links: { label: MessageKey; href: string }[] }[] = [
   {
-    title: "Explore",
+    title: "footer.explore",
     links: [
-      { label: "Hotels", href: "/search?type=hotel" },
-      { label: "Activities", href: "/search?type=activity" },
-      { label: "All listings", href: "/search" },
+      { label: "nav.hotels", href: "/search?type=hotel" },
+      { label: "nav.activities", href: "/search?type=activity" },
+      { label: "nav.transport", href: "/search?type=transport" },
+      { label: "footer.allListings", href: "/search" },
     ],
   },
   {
-    title: "Company",
+    title: "footer.company",
     links: [
-      { label: "About Boolk", href: "/" },
-      { label: "Careers", href: "/" },
-      { label: "Press", href: "/" },
+      { label: "footer.about", href: "/" },
+      { label: "footer.careers", href: "/" },
+      { label: "footer.press", href: "/" },
     ],
   },
   {
-    title: "Support",
+    title: "footer.support",
     links: [
-      { label: "Help center", href: "/" },
-      { label: "Cancellation", href: "/" },
-      { label: "Contact us", href: "/" },
+      { label: "footer.help", href: "/" },
+      { label: "footer.cancellation", href: "/" },
+      { label: "footer.contact", href: "/" },
     ],
   },
 ];
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const locale = await getLocale();
+  const dict = getDictionary(locale);
+  const year = new Date().getFullYear();
+
   return (
     <footer className="mt-16 border-t border-slate-200 bg-slate-50">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -42,14 +49,13 @@ export function SiteFooter() {
               </span>
             </div>
             <p className="mt-3 max-w-xs text-sm text-slate-500">
-              Book hotels and unforgettable experiences across the world&apos;s
-              best destinations.
+              {t(dict, "common.tagline")}
             </p>
           </div>
           {COLUMNS.map((col) => (
             <div key={col.title}>
               <h3 className="text-sm font-semibold text-slate-900">
-                {col.title}
+                {t(dict, col.title)}
               </h3>
               <ul className="mt-3 space-y-2">
                 {col.links.map((link) => (
@@ -58,7 +64,7 @@ export function SiteFooter() {
                       href={link.href}
                       className="text-sm text-slate-500 hover:text-slate-900"
                     >
-                      {link.label}
+                      {t(dict, link.label)}
                     </Link>
                   </li>
                 ))}
@@ -67,8 +73,8 @@ export function SiteFooter() {
           ))}
         </div>
         <div className="mt-10 flex flex-col items-center justify-between gap-2 border-t border-slate-200 pt-6 text-sm text-slate-400 sm:flex-row">
-          <p>© {new Date().getFullYear()} Boolk. Demo project.</p>
-          <p>Prices in USD. No real charges are made.</p>
+          <p>{t(dict, "footer.rights", { year })}</p>
+          <p>{t(dict, "footer.pricesNote")}</p>
         </div>
       </div>
     </footer>

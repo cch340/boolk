@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Select } from "@/components/ui";
 import { cn } from "@/lib/cn";
+import { getDictionary, t, type Locale } from "@/lib/i18n";
 
 export interface SearchFilterValues {
   q: string;
@@ -12,10 +13,20 @@ export interface SearchFilterValues {
   maxPrice: string;
   minRating: string;
   sort: string;
+  mode: string;
+  origin: string;
+  destination: string;
 }
 
-export function SearchFilters({ initial }: { initial: SearchFilterValues }) {
+export function SearchFilters({
+  initial,
+  locale,
+}: {
+  initial: SearchFilterValues;
+  locale: Locale;
+}) {
   const router = useRouter();
+  const dict = getDictionary(locale);
   const [values, setValues] = useState<SearchFilterValues>(initial);
   const [open, setOpen] = useState(false);
 
@@ -35,6 +46,12 @@ export function SearchFilters({ initial }: { initial: SearchFilterValues }) {
     if (values.maxPrice) params.set("maxPrice", values.maxPrice);
     if (values.minRating) params.set("minRating", values.minRating);
     if (values.sort) params.set("sort", values.sort);
+    if (values.type === "transport") {
+      if (values.mode) params.set("mode", values.mode);
+      if (values.origin.trim()) params.set("origin", values.origin.trim());
+      if (values.destination.trim())
+        params.set("destination", values.destination.trim());
+    }
     router.push(`/search?${params.toString()}`);
     setOpen(false);
   }
@@ -47,40 +64,62 @@ export function SearchFilters({ initial }: { initial: SearchFilterValues }) {
       maxPrice: "",
       minRating: "",
       sort: "",
+      mode: "",
+      origin: "",
+      destination: "",
     });
     router.push("/search");
     setOpen(false);
   }
 
+  const isTransport = values.type === "transport";
+
   const form = (
     <form onSubmit={apply} className="space-y-5">
       <Input
-        label="Search"
-        placeholder="City or keyword"
+        label={t(dict, "nav.search")}
+        placeholder={t(dict, "search.filter.searchPh")}
         value={values.q}
         onChange={(e) => set("q", e.target.value)}
       />
 
       <Select
-        label="Type"
+        label={t(dict, "search.filter.type")}
         value={values.type}
         onChange={(e) => set("type", e.target.value)}
         options={[
-          { value: "", label: "All types" },
-          { value: "hotel", label: "Hotels" },
-          { value: "activity", label: "Activities" },
+          { value: "", label: t(dict, "search.filter.allTypes") },
+          { value: "hotel", label: t(dict, "nav.hotels") },
+          { value: "activity", label: t(dict, "nav.activities") },
+          { value: "transport", label: t(dict, "nav.transport") },
         ]}
       />
 
+      {isTransport && (
+        <Select
+          label={t(dict, "search.filter.mode")}
+          value={values.mode}
+          onChange={(e) => set("mode", e.target.value)}
+          options={[
+            { value: "", label: t(dict, "search.filter.modeAll") },
+            { value: "flight", label: t(dict, "transport.mode.flight") },
+            { value: "train", label: t(dict, "transport.mode.train") },
+            { value: "bus", label: t(dict, "transport.mode.bus") },
+            { value: "ferry", label: t(dict, "transport.mode.ferry") },
+            { value: "transfer", label: t(dict, "transport.mode.transfer") },
+          ]}
+        />
+      )}
+
       <div>
         <span className="mb-1.5 block text-sm font-medium text-slate-700">
-          Price range (USD)
+          {t(dict, "search.filter.priceUsd")}
         </span>
         <div className="flex items-center gap-2">
           <Input
             type="number"
             min={0}
-            placeholder="Min"
+            placeholder={t(dict, "search.filter.minPrice")}
             value={values.minPrice}
             onChange={(e) => set("minPrice", e.target.value)}
           />
@@ -88,7 +127,7 @@ export function SearchFilters({ initial }: { initial: SearchFilterValues }) {
           <Input
             type="number"
             min={0}
-            placeholder="Max"
+            placeholder={t(dict, "search.filter.maxPrice")}
             value={values.maxPrice}
             onChange={(e) => set("maxPrice", e.target.value)}
           />
@@ -96,11 +135,11 @@ export function SearchFilters({ initial }: { initial: SearchFilterValues }) {
       </div>
 
       <Select
-        label="Minimum rating"
+        label={t(dict, "search.filter.rating")}
         value={values.minRating}
         onChange={(e) => set("minRating", e.target.value)}
         options={[
-          { value: "", label: "Any rating" },
+          { value: "", label: t(dict, "search.filter.ratingAny") },
           { value: "3", label: "3.0+" },
           { value: "4", label: "4.0+" },
           { value: "4.5", label: "4.5+" },
@@ -108,23 +147,23 @@ export function SearchFilters({ initial }: { initial: SearchFilterValues }) {
       />
 
       <Select
-        label="Sort by"
+        label={t(dict, "search.sort.label")}
         value={values.sort}
         onChange={(e) => set("sort", e.target.value)}
         options={[
-          { value: "", label: "Recommended" },
-          { value: "price-asc", label: "Price: low to high" },
-          { value: "price-desc", label: "Price: high to low" },
-          { value: "rating", label: "Highest rated" },
+          { value: "", label: t(dict, "search.sort.recommended") },
+          { value: "price-asc", label: t(dict, "search.sort.priceAsc") },
+          { value: "price-desc", label: t(dict, "search.sort.priceDesc") },
+          { value: "rating", label: t(dict, "search.sort.rating") },
         ]}
       />
 
       <div className="flex gap-2 pt-1">
         <Button type="submit" fullWidth>
-          Apply
+          {t(dict, "search.filter.apply")}
         </Button>
         <Button type="button" variant="outline" onClick={reset}>
-          Reset
+          {t(dict, "search.filter.clear")}
         </Button>
       </div>
     </form>
@@ -140,7 +179,9 @@ export function SearchFilters({ initial }: { initial: SearchFilterValues }) {
           fullWidth
           onClick={() => setOpen((v) => !v)}
         >
-          {open ? "Hide filters" : "Filters & sort"}
+          {open
+            ? t(dict, "search.filter.hide")
+            : t(dict, "search.filter.toggle")}
         </Button>
       </div>
 
@@ -157,7 +198,9 @@ export function SearchFilters({ initial }: { initial: SearchFilterValues }) {
       {/* Desktop sidebar */}
       <aside className="hidden lg:block">
         <div className="sticky top-20 rounded-xl border border-slate-200 bg-white p-5 shadow-card">
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">Filters</h2>
+          <h2 className="mb-4 text-lg font-semibold text-slate-900">
+            {t(dict, "search.filters")}
+          </h2>
           {form}
         </div>
       </aside>
