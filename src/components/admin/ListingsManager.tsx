@@ -210,7 +210,7 @@ export function ListingsManager({
                     <p className="text-sm text-slate-500">
                       <span className="capitalize">{l.type}</span> · {l.city}
                     </p>
-                    <div className="mt-1 flex items-center gap-3">
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                       <span className="text-sm font-medium text-slate-900">
                         {formatPrice(l.pricePerUnitCents)}/{l.unitLabel}
                       </span>
