@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { Listing, ListingType, UnitLabel } from "@/lib/types";
+import type { Listing, ListingType, TransportMode, UnitLabel } from "@/lib/types";
 import { Button, Input, Select } from "@/components/ui";
 import { slugify } from "@/app/admin/_lib/status";
+import { TRANSPORT_MODE_OPTIONS } from "@/app/admin/_lib/transport";
 
 interface FormState {
   type: ListingType;
@@ -22,9 +23,21 @@ interface FormState {
   highlights: string;
   featured: boolean;
   active: boolean;
+  // Transport fields (used iff type === 'transport').
+  tMode: TransportMode;
+  tOriginCity: string;
+  tOriginCode: string;
+  tDestinationCity: string;
+  tDestinationCode: string;
+  tCarrier: string;
+  tServiceCode: string;
+  tDepartureTime: string;
+  tArrivalTime: string;
+  tDurationMinutes: string;
 }
 
 function fromListing(l?: Listing): FormState {
+  const t = l?.transport;
   return {
     type: l?.type ?? "hotel",
     title: l?.title ?? "",
@@ -42,6 +55,16 @@ function fromListing(l?: Listing): FormState {
     highlights: (l?.highlights ?? []).join("\n"),
     featured: l?.featured ?? false,
     active: l?.active ?? true,
+    tMode: t?.mode ?? "flight",
+    tOriginCity: t?.originCity ?? "",
+    tOriginCode: t?.originCode ?? "",
+    tDestinationCity: t?.destinationCity ?? "",
+    tDestinationCode: t?.destinationCode ?? "",
+    tCarrier: t?.carrier ?? "",
+    tServiceCode: t?.serviceCode ?? "",
+    tDepartureTime: t?.departureTime ?? "",
+    tArrivalTime: t?.arrivalTime ?? "",
+    tDurationMinutes: t ? String(t.durationMinutes) : "",
   };
 }
 
@@ -83,6 +106,8 @@ export function ListingForm({
     }));
   }
 
+  const isTransport = form.type === "transport";
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -91,16 +116,48 @@ export function ListingForm({
     if (!Number.isFinite(priceDollars) || priceDollars < 0)
       return setError("Enter a valid price");
 
+    let transport: Record<string, unknown> | undefined;
+    if (isTransport) {
+      const required: Array<[string, string]> = [
+        ["origin city", form.tOriginCity],
+        ["origin code", form.tOriginCode],
+        ["destination city", form.tDestinationCity],
+        ["destination code", form.tDestinationCode],
+        ["carrier", form.tCarrier],
+        ["service code", form.tServiceCode],
+        ["departure time", form.tDepartureTime],
+        ["arrival time", form.tArrivalTime],
+      ];
+      const missing = required.find(([, v]) => !v.trim());
+      if (missing) return setError(`Transport ${missing[0]} is required`);
+      const duration = Number(form.tDurationMinutes);
+      if (!Number.isInteger(duration) || duration <= 0)
+        return setError("Enter a valid transport duration (minutes)");
+      transport = {
+        mode: form.tMode,
+        originCity: form.tOriginCity.trim(),
+        originCode: form.tOriginCode.trim(),
+        destinationCity: form.tDestinationCity.trim(),
+        destinationCode: form.tDestinationCode.trim(),
+        carrier: form.tCarrier.trim(),
+        serviceCode: form.tServiceCode.trim(),
+        departureTime: form.tDepartureTime.trim(),
+        arrivalTime: form.tArrivalTime.trim(),
+        durationMinutes: duration,
+      };
+    }
+
     const payload = {
       type: form.type,
       title: form.title.trim(),
       slug: form.slug.trim(),
-      city: form.city.trim(),
+      // Transport keeps city synced to the origin city (server enforces too).
+      city: isTransport ? form.tOriginCity.trim() : form.city.trim(),
       country: form.country.trim(),
       description: form.description.trim(),
       images: lines(form.images),
       pricePerUnitCents: Math.round(priceDollars * 100),
-      unitLabel: form.unitLabel,
+      unitLabel: isTransport ? "person" : form.unitLabel,
       rating: Number(form.rating) || 0,
       reviewCount: Number(form.reviewCount) || 0,
       maxGuests: Number(form.maxGuests) || 1,
@@ -108,6 +165,7 @@ export function ListingForm({
       highlights: lines(form.highlights),
       featured: form.featured,
       active: form.active,
+      transport,
     };
 
     setSaving(true);
@@ -149,10 +207,19 @@ export function ListingForm({
           <Select
             id="lf-type"
             value={form.type}
-            onChange={(e) => set("type", e.target.value as ListingType)}
+            onChange={(e) => {
+              const nextType = e.target.value as ListingType;
+              setForm((f) => ({
+                ...f,
+                type: nextType,
+                // Transport is always per person.
+                unitLabel: nextType === "transport" ? "person" : f.unitLabel,
+              }));
+            }}
             options={[
               { value: "hotel", label: "Hotel" },
               { value: "activity", label: "Activity" },
+              { value: "transport", label: "Transport" },
             ]}
           />
         </div>
@@ -163,6 +230,7 @@ export function ListingForm({
           <Select
             id="lf-unit"
             value={form.unitLabel}
+            disabled={isTransport}
             onChange={(e) => set("unitLabel", e.target.value as UnitLabel)}
             options={[
               { value: "night", label: "Per night" },
@@ -191,8 +259,9 @@ export function ListingForm({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
-          label="City"
-          value={form.city}
+          label={isTransport ? "City (synced to origin)" : "City"}
+          value={isTransport ? form.tOriginCity : form.city}
+          disabled={isTransport}
           onChange={(e) => set("city", e.target.value)}
         />
         <Input
@@ -201,6 +270,91 @@ export function ListingForm({
           onChange={(e) => set("country", e.target.value)}
         />
       </div>
+
+      {isTransport && (
+        <fieldset className="space-y-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+          <legend className="px-1 text-sm font-semibold text-slate-700">
+            Transport details
+          </legend>
+
+          <div>
+            <label className={labelCls} htmlFor="lf-tmode">
+              Mode
+            </label>
+            <Select
+              id="lf-tmode"
+              value={form.tMode}
+              onChange={(e) => set("tMode", e.target.value as TransportMode)}
+              options={TRANSPORT_MODE_OPTIONS}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              label="Origin city"
+              value={form.tOriginCity}
+              onChange={(e) => set("tOriginCity", e.target.value)}
+              placeholder="Tokyo"
+            />
+            <Input
+              label="Origin code"
+              value={form.tOriginCode}
+              onChange={(e) => set("tOriginCode", e.target.value)}
+              placeholder="HND"
+            />
+            <Input
+              label="Destination city"
+              value={form.tDestinationCity}
+              onChange={(e) => set("tDestinationCity", e.target.value)}
+              placeholder="Singapore"
+            />
+            <Input
+              label="Destination code"
+              value={form.tDestinationCode}
+              onChange={(e) => set("tDestinationCode", e.target.value)}
+              placeholder="SIN"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              label="Carrier"
+              value={form.tCarrier}
+              onChange={(e) => set("tCarrier", e.target.value)}
+              placeholder="ANA"
+            />
+            <Input
+              label="Service code"
+              value={form.tServiceCode}
+              onChange={(e) => set("tServiceCode", e.target.value)}
+              placeholder="NH803"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <Input
+              label="Departure time"
+              value={form.tDepartureTime}
+              onChange={(e) => set("tDepartureTime", e.target.value)}
+              placeholder="08:30"
+            />
+            <Input
+              label="Arrival time"
+              value={form.tArrivalTime}
+              onChange={(e) => set("tArrivalTime", e.target.value)}
+              placeholder="15:05"
+            />
+            <Input
+              label="Duration (min)"
+              type="number"
+              min="1"
+              value={form.tDurationMinutes}
+              onChange={(e) => set("tDurationMinutes", e.target.value)}
+              placeholder="455"
+            />
+          </div>
+        </fieldset>
+      )}
 
       <div>
         <label className={labelCls} htmlFor="lf-desc">

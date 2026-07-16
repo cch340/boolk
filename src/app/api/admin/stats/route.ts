@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { bookings, listings, users } from "@/lib/db";
-import type { BookingStatus } from "@/lib/types";
+import { bookings, listings, users, points } from "@/lib/db";
+import type { BookingStatus, ListingType } from "@/lib/types";
 import { withAdmin } from "@/app/admin/_lib/guard";
 
 export async function GET(): Promise<NextResponse> {
@@ -12,6 +12,19 @@ export async function GET(): Promise<NextResponse> {
     const revenueCents = allBookings
       .filter((b) => b.status === "confirmed" || b.status === "completed")
       .reduce((sum, b) => sum + b.totalCents, 0);
+
+    const byType = allListings.reduce<Record<ListingType, number>>(
+      (acc, l) => {
+        acc[l.type] = (acc[l.type] ?? 0) + 1;
+        return acc;
+      },
+      { hotel: 0, activity: 0, transport: 0 },
+    );
+
+    // Points outstanding = sum of every ledger delta across all users.
+    const pointsOutstanding = points
+      .list()
+      .reduce((sum, tx) => sum + tx.delta, 0);
 
     const byStatus = allBookings.reduce<Record<BookingStatus, number>>(
       (acc, b) => {
@@ -32,7 +45,9 @@ export async function GET(): Promise<NextResponse> {
       totalBookings: allBookings.length,
       activeListings: allListings.filter((l) => l.active).length,
       totalListings: allListings.length,
+      listingsByType: byType,
       totalUsers: allUsers.length,
+      pointsOutstanding,
       byStatus,
     });
   });

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { bookings } from "@/lib/db";
-import type { BookingStatus } from "@/lib/types";
+import type { Booking, BookingStatus } from "@/lib/types";
 import { withAdmin, readJson } from "@/app/admin/_lib/guard";
 import { canTransition } from "@/app/admin/_lib/status";
+import { awardForBooking, refundRedemption, revokeEarn } from "@/lib/points";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -40,7 +41,32 @@ export async function PATCH(req: Request, ctx: Ctx): Promise<NextResponse> {
       );
     }
 
-    const updated = bookings.update(id, { status: target });
-    return NextResponse.json({ booking: updated });
+    let updated = bookings.update(id, { status: target }) as Booking;
+
+    // Points side-effects. All engine calls are idempotent; wrap so a points
+    // failure never silently 500s the transition — surface it as a warning.
+    let warning: string | undefined;
+    try {
+      if (target === "completed") {
+        const earned = awardForBooking(updated);
+        if (earned) {
+          // Persist the earned total on the booking for display.
+          updated =
+            (bookings.update(id, { pointsEarned: earned.delta }) as Booking) ??
+            updated;
+        }
+      } else if (target === "refunded") {
+        revokeEarn(updated);
+      } else if (target === "cancelled") {
+        refundRedemption(updated);
+      }
+    } catch (err) {
+      warning =
+        err instanceof Error
+          ? `Status updated, but points update failed: ${err.message}`
+          : "Status updated, but points update failed";
+    }
+
+    return NextResponse.json(warning ? { booking: updated, warning } : { booking: updated });
   });
 }

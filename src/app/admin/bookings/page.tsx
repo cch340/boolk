@@ -22,6 +22,7 @@ export default function AdminBookingsPage() {
         listingTitle: listing?.title ?? "(deleted listing)",
         listingType: listing?.type ?? null,
         listingCity: listing?.city ?? "",
+        listingTransport: listing?.transport ?? null,
         userName: user?.name ?? "",
         userEmail: user?.email ?? b.guestEmail,
       };

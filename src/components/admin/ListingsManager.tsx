@@ -15,6 +15,7 @@ import {
 } from "@/components/ui";
 import { PageHeader, EmptyState } from "@/components/admin/PageHeader";
 import { ListingForm } from "@/components/admin/ListingForm";
+import { routeSummary } from "@/app/admin/_lib/transport";
 
 type Editing = { mode: "new" } | { mode: "edit"; listing: Listing } | null;
 
@@ -107,6 +108,7 @@ export function ListingsManager({
               { value: "all", label: "All types" },
               { value: "hotel", label: "Hotels" },
               { value: "activity", label: "Activities" },
+              { value: "transport", label: "Transport" },
             ]}
           />
         </div>
@@ -159,7 +161,9 @@ export function ListingsManager({
                     <td className="px-4 py-3 capitalize text-slate-600">
                       {l.type}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">{l.city}</td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {routeSummary(l.transport) ?? l.city}
+                    </td>
                     <td className="px-4 py-3 font-medium text-slate-900">
                       {formatPrice(l.pricePerUnitCents)}
                       <span className="text-xs font-normal text-slate-400">
@@ -208,7 +212,8 @@ export function ListingsManager({
                       </Badge>
                     </div>
                     <p className="text-sm text-slate-500">
-                      <span className="capitalize">{l.type}</span> · {l.city}
+                      <span className="capitalize">{l.type}</span> ·{" "}
+                      {routeSummary(l.transport) ?? l.city}
                     </p>
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                       <span className="text-sm font-medium text-slate-900">

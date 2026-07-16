@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { bookings, listings, users } from "@/lib/db";
+import { bookings, listings, users, points } from "@/lib/db";
 import type { BookingStatus } from "@/lib/types";
 import { formatPrice, formatDate } from "@/lib/format";
 import { Card, CardBody, Badge } from "@/components/ui";
 import { PageHeader, EmptyState } from "@/components/admin/PageHeader";
 import { bookingTone } from "@/app/admin/_lib/status";
+import { routeSummary } from "@/app/admin/_lib/transport";
 
 const STATUS_ORDER: BookingStatus[] = [
   "pending",
@@ -25,6 +26,15 @@ export default function AdminDashboardPage() {
     .filter((b) => b.status === "confirmed" || b.status === "completed")
     .reduce((sum, b) => sum + b.totalCents, 0);
 
+  const activeListings = allListings.filter((l) => l.active).length;
+  const countByType = (t: string) =>
+    allListings.filter((l) => l.type === t).length;
+
+  // Points outstanding = sum of every points ledger delta.
+  const pointsOutstanding = points
+    .list()
+    .reduce((sum, tx) => sum + tx.delta, 0);
+
   const byStatus = STATUS_ORDER.map((status) => ({
     status,
     count: allBookings.filter((b) => b.status === status).length,
@@ -42,10 +52,17 @@ export default function AdminDashboardPage() {
     { label: "Bookings", value: String(allBookings.length), hint: "All time" },
     {
       label: "Active listings",
-      value: String(allListings.filter((l) => l.active).length),
-      hint: `${allListings.length} total`,
+      value: String(activeListings),
+      hint: `${countByType("hotel")} hotels · ${countByType(
+        "activity",
+      )} activities · ${countByType("transport")} transport`,
     },
     { label: "Users", value: String(allUsers.length), hint: "Registered" },
+    {
+      label: "Points outstanding",
+      value: pointsOutstanding.toLocaleString("en-US"),
+      hint: "Unredeemed member balance",
+    },
   ];
 
   return (
@@ -53,7 +70,7 @@ export default function AdminDashboardPage() {
       <PageHeader title="Dashboard" description="Overview of Boolk activity." />
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {kpis.map((k) => (
           <Card key={k.label}>
             <CardBody>
@@ -125,7 +142,15 @@ export default function AdminDashboardPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-slate-700">
-                      {listingById.get(b.listingId)?.title ?? "—"}
+                      <div>{listingById.get(b.listingId)?.title ?? "—"}</div>
+                      {(() => {
+                        const route = routeSummary(
+                          listingById.get(b.listingId)?.transport,
+                        );
+                        return route ? (
+                          <div className="text-xs text-slate-400">{route}</div>
+                        ) : null;
+                      })()}
                     </td>
                     <td className="px-4 py-3 text-slate-600">
                       {formatDate(b.checkIn)}
@@ -154,6 +179,12 @@ export default function AdminDashboardPage() {
                     </p>
                     <p className="truncate text-sm text-slate-500">
                       {listingById.get(b.listingId)?.title ?? "—"}
+                      {(() => {
+                        const route = routeSummary(
+                          listingById.get(b.listingId)?.transport,
+                        );
+                        return route ? ` · ${route}` : "";
+                      })()}
                     </p>
                   </div>
                   <Badge tone={bookingTone(b.status)}>{b.status}</Badge>

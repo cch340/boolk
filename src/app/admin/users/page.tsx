@@ -1,5 +1,6 @@
-import { bookings, users } from "@/lib/db";
+import { bookings, users, points } from "@/lib/db";
 import { toPublicUser, getSessionUser } from "@/lib/auth";
+import { getBalance } from "@/lib/points";
 import { UsersManager, type AdminUser } from "@/components/admin/UsersManager";
 
 export default async function AdminUsersPage() {
@@ -16,7 +17,13 @@ export default async function AdminUsersPage() {
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     )
-    .map((u) => ({ ...toPublicUser(u), bookingCount: counts[u.id] ?? 0 }));
+    .map((u) => ({
+      ...toPublicUser(u),
+      bookingCount: counts[u.id] ?? 0,
+      pointsBalance: getBalance(u.id),
+      // byUser is already sorted newest-first; take the most recent 15.
+      ledger: points.byUser(u.id).slice(0, 15),
+    }));
 
   return <UsersManager users={rows} currentUserId={admin?.id ?? ""} />;
 }

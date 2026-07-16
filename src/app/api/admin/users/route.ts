@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { bookings, users } from "@/lib/db";
 import { toPublicUser } from "@/lib/auth";
+import { getBalance } from "@/lib/points";
 import { withAdmin } from "@/app/admin/_lib/guard";
 
 export async function GET(): Promise<NextResponse> {
@@ -16,7 +17,11 @@ export async function GET(): Promise<NextResponse> {
         (a, b) =>
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       )
-      .map((u) => ({ ...toPublicUser(u), bookingCount: counts[u.id] ?? 0 }));
+      .map((u) => ({
+        ...toPublicUser(u),
+        bookingCount: counts[u.id] ?? 0,
+        pointsBalance: getBalance(u.id),
+      }));
 
     return NextResponse.json({ users: rows });
   });

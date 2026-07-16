@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Booking, BookingStatus, ListingType } from "@/lib/types";
+import type {
+  Booking,
+  BookingStatus,
+  ListingType,
+  TransportInfo,
+} from "@/lib/types";
 import { formatPrice, formatDate } from "@/lib/format";
 import { Button, Input, Select, Badge, Card } from "@/components/ui";
 import { PageHeader, EmptyState } from "@/components/admin/PageHeader";
@@ -11,11 +16,13 @@ import {
   TRANSITION_LABELS,
   bookingTone,
 } from "@/app/admin/_lib/status";
+import { routeSummary } from "@/app/admin/_lib/transport";
 
 export interface AdminBooking extends Booking {
   listingTitle: string;
   listingType: ListingType | null;
   listingCity: string;
+  listingTransport: TransportInfo | null;
   userName: string;
   userEmail: string;
 }
@@ -59,11 +66,15 @@ export function BookingsManager({ bookings }: { bookings: AdminBooking[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: next }),
       });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        warning?: string;
+      };
       if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
         setError(data.error ?? "Failed to update booking");
         return;
       }
+      setError(data.warning ?? null);
       router.refresh();
     } finally {
       setBusyId(null);
@@ -100,6 +111,7 @@ export function BookingsManager({ bookings }: { bookings: AdminBooking[] }) {
               { value: "all", label: "All types" },
               { value: "hotel", label: "Hotels" },
               { value: "activity", label: "Activities" },
+              { value: "transport", label: "Transport" },
             ]}
           />
         </div>
@@ -131,15 +143,30 @@ export function BookingsManager({ bookings }: { bookings: AdminBooking[] }) {
                     aria-expanded={open}
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="truncate font-medium text-slate-900">
                           {b.guestName}
                         </span>
                         <Badge tone={bookingTone(b.status)}>{b.status}</Badge>
+                        {b.currency && b.currency !== "USD" && (
+                          <Badge tone="info">{b.currency}</Badge>
+                        )}
+                        {(b.pointsRedeemed ?? 0) > 0 && (
+                          <Badge tone="warning">
+                            −{b.pointsRedeemed} pts
+                          </Badge>
+                        )}
+                        {(b.pointsEarned ?? 0) > 0 && (
+                          <Badge tone="success">+{b.pointsEarned} pts</Badge>
+                        )}
                       </div>
                       <p className="truncate text-sm text-slate-500">
                         {b.listingTitle}
-                        {b.listingCity ? ` · ${b.listingCity}` : ""}
+                        {(() => {
+                          const route = routeSummary(b.listingTransport);
+                          const sub = route || b.listingCity;
+                          return sub ? ` · ${sub}` : "";
+                        })()}
                       </p>
                     </div>
                     <div className="hidden text-right sm:block">
@@ -208,6 +235,36 @@ export function BookingsManager({ bookings }: { bookings: AdminBooking[] }) {
                                 </dd>
                               </div>
                             )}
+                            <div className="flex justify-between">
+                              <dt className="text-slate-500">Display currency</dt>
+                              <dd className="text-slate-900">
+                                {b.currency ?? "USD"}
+                                {b.currency && b.currency !== "USD" && (
+                                  <span className="ml-1 text-xs text-slate-400">
+                                    (charged in USD)
+                                  </span>
+                                )}
+                              </dd>
+                            </div>
+                            {(b.pointsRedeemed ?? 0) > 0 && (
+                              <div className="flex justify-between">
+                                <dt className="text-slate-500">
+                                  Points redeemed
+                                </dt>
+                                <dd className="text-slate-900">
+                                  {b.pointsRedeemed} pts
+                                  <span className="ml-1 text-emerald-600">
+                                    −{formatPrice(b.discountCents ?? 0)}
+                                  </span>
+                                </dd>
+                              </div>
+                            )}
+                            <div className="flex justify-between">
+                              <dt className="text-slate-500">Points earned</dt>
+                              <dd className="text-slate-900">
+                                {b.pointsEarned ?? 0} pts
+                              </dd>
+                            </div>
                             <div className="flex justify-between border-t border-slate-200 pt-1 font-medium">
                               <dt className="text-slate-700">Total</dt>
                               <dd className="text-slate-900">
