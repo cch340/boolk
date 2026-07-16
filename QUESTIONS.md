@@ -29,5 +29,19 @@ I proceeded with best-guess answers as instructed. Each item lists the question 
 9. **Admin capabilities for v1?**
    → Dashboard (revenue/bookings KPIs), listings CRUD, bookings management (confirm/cancel/refund status), user management (view/deactivate), reviews moderation.
 
-10. **Deployment target?**
+10. **Deployment target?** *(see below, unchanged)*
+
+## Round 2 — flights/transport, multi-currency, multi-language, member points
+
+11. **What transport modes, and are flights "real" (seat maps, fare classes, GDS)?**
+    → Implemented a **transport listing type** covering `flight | train | bus | ferry | transfer` with route (origin → destination), carrier, service code, departure/arrival times, and duration — priced per person like Klook transport products. No GDS/seat-map integration; that requires an external supplier API (e.g. Duffel/Amadeus) and is the clear v3 integration point.
+
+12. **Live exchange rates or fixed?**
+    → **Static rates table** (USD base) in `src/lib/currency.ts` for USD, EUR, GBP, JPY, SGD, THB, MYR, IDR. Prices are stored in USD cents and converted for display only; **charges/records stay USD** so money math never depends on a rate snapshot. Swapping in a live-rates API later is one function.
+
+13. **Which languages, and does the admin portal get translated too?**
+    → **English, 中文 (Simplified Chinese), 日本語** via a lightweight dictionary-based i18n layer (cookie-persisted, no external service). The **user app is fully translated; the admin portal stays English** — typical for back-office tools and keeps translation surface manageable. Listing content (titles/descriptions) is not machine-translated; a `translations` field per listing would be the next step.
+
+14. **Points scheme mechanics?**
+    → **Earn 1 point per $1** (USD) on bookings when they are **completed**; **redeem 100 points = $1** off at checkout (up to 50% of the order). Ledger-based (`PointsTransaction` entries; balance = sum) so every earn/redeem/adjust/refund is auditable. Points are refunded if a redeemed booking is cancelled, and earned points are revoked if a completed booking is refunded. Admin can manually adjust with a reason. No expiry and no tiers in v2.
     → Built to run with `npm run dev` / `npm run build && npm start` anywhere. Note: file-backed storage means serverless hosts (Vercel) won't persist writes — use a VM/container host, or swap the repository layer to a hosted DB.

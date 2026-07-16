@@ -52,3 +52,37 @@ Klook/Agoda-style travel platform. One Next.js app, two surfaces. Both must be f
 ## Seed data
 - ~12 hotels + ~12 activities across Tokyo, Bangkok, Singapore, Bali, Paris, Rome; varied prices/ratings; 8+ featured
 - 2 users (admin/demo as in QUESTIONS.md), ~10 bookings in varied statuses, ~15 reviews
+
+---
+
+# Round 2 — Transport, Multi-currency, Multi-language, Member Points
+
+## Domain extensions (`src/lib/types.ts`)
+- `ListingType` gains `'transport'`. New `TransportMode = 'flight'|'train'|'bus'|'ferry'|'transfer'`.
+- `Listing` gains optional `transport?: { mode: TransportMode; originCity: string; originCode: string; destinationCity: string; destinationCode: string; carrier: string; serviceCode: string; departureTime: string; arrivalTime: string; durationMinutes: number }` (present iff type === 'transport'; unitLabel 'person'; `city` = originCity for search compatibility).
+- New `PointsTransaction { id, userId, bookingId?, delta (int, +earn/-redeem), reason: 'earn'|'redeem'|'redeem-refund'|'earn-revoke'|'admin-adjust', note?, createdAt }`.
+- `Booking` gains `currency: string` (display currency chosen at checkout, records stay USD), `pointsRedeemed: number` (points spent), `discountCents: number` (USD value of redemption), `pointsEarned: number` (0 until completed).
+- `ListingQuery` gains `mode?: TransportMode`, `origin?: string`, `destination?: string` (match transport city/code, case-insensitive substring).
+
+## Currency (`src/lib/currency.ts`)
+- `CURRENCIES`: USD $, EUR €, GBP £, JPY ¥, SGD S$, THB ฿, MYR RM, IDR Rp with static `ratePerUsd` and `decimals` (JPY/IDR 0).
+- `convertFromUsdCents(cents, code)`, `formatMoney(cents, code)` (converted display string), cookie `currency` (default USD).
+- All storage/charging stays USD cents. `formatPrice` remains USD-only; UI uses `formatMoney` with active currency.
+
+## i18n (`src/lib/i18n/`)
+- Locales: `en`, `zh`, `ja`. Dictionary modules `en.ts`/`zh.ts`/`ja.ts` typed by a shared key union; `getLocale()` reads cookie `locale` (default en); `t(locale, key, vars?)` with `{var}` interpolation.
+- USER SURFACE fully translated (header/footer, home, search, listing, checkout, bookings, auth pages, validation/status labels). ADMIN stays English.
+- Locale + currency pickers live in the site header (client component posting to `POST /api/prefs` which sets cookies, then refresh).
+
+## Points (`src/lib/points.ts`)
+- Rules: earn floor(totalCents/100) points when booking → completed; redeem at checkout 100 pts = 100 cents (USD), max 50% of order, integer multiples of 100.
+- `getBalance(userId)`, `award/redeem/refundRedemption/revokeEarn/adminAdjust` — all append ledger entries via db; guard against double-award (one 'earn' per booking) and over-redemption.
+- Wire-in: POST /api/bookings applies redemption (validate balance, write 'redeem' entry, set pointsRedeemed/discountCents, total = gross − discount); booking cancel (user or admin) refunds redeemed points; admin transition to 'completed' awards earn; 'refunded' revokes earned points.
+
+## Surfaces
+- User: home gets a Transport search tab (origin/destination/date); /search supports type=transport + mode filter and renders route cards (origin → destination, times, carrier); /listing/[slug] transport layout shows route/schedule facts and books passengers on a date; checkout shows points balance + redemption slider/input and live discount, totals in active currency (with "charged in USD" note); /bookings shows points earned/redeemed per booking; new points summary (balance + ledger) on the bookings page or /account/points.
+- Admin (English, USD): listings form gains transport fields when type=transport; bookings table shows currency/points columns and triggers points side-effects on transitions; users page shows points balance with manual adjust (delta + note → 'admin-adjust'); dashboard adds points-outstanding KPI.
+
+## Seed additions
+- 10 transport listings (flights TYO⇄SIN/BKK, trains Tokyo→Kyoto / Paris→Rome, ferries Bali, airport transfers) across existing cities; a few points ledger entries for the demo user consistent with completed bookings.
+
