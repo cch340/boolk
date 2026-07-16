@@ -1,0 +1,46 @@
+[
+  {
+    "id": "pts_01",
+    "userId": "usr_demo001",
+    "delta": 500,
+    "reason": "admin-adjust",
+    "note": "Welcome bonus",
+    "createdAt": "2026-04-07T00:00:00.000Z"
+  },
+  {
+    "id": "pts_02",
+    "userId": "usr_demo001",
+    "bookingId": "bkg_04",
+    "delta": 672,
+    "reason": "earn",
+    "note": "Earned 672 points for booking bkg_04",
+    "createdAt": "2026-06-15T00:00:00.000Z"
+  },
+  {
+    "id": "pts_03",
+    "userId": "usr_demo001",
+    "bookingId": "bkg_05",
+    "delta": 158,
+    "reason": "earn",
+    "note": "Earned 158 points for booking bkg_05",
+    "createdAt": "2026-05-23T00:00:00.000Z"
+  },
+  {
+    "id": "pts_04",
+    "userId": "usr_demo001",
+    "bookingId": "bkg_06",
+    "delta": 356,
+    "reason": "earn",
+    "note": "Earned 356 points for booking bkg_06",
+    "createdAt": "2026-05-26T00:00:00.000Z"
+  },
+  {
+    "id": "pts_05",
+    "userId": "usr_demo001",
+    "bookingId": "bkg_10",
+    "delta": 252,
+    "reason": "earn",
+    "note": "Earned 252 points for booking bkg_10",
+    "createdAt": "2026-06-02T00:00:00.000Z"
+  }
+]

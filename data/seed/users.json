@@ -3,7 +3,7 @@
     "id": "usr_admin01",
     "email": "admin@boolk.dev",
     "name": "Ava Administrator",
-    "passwordHash": "7d1f37c72d3d3af694a4c1812d536207:d0f33a6b54e1cd9e1ade15f76bb1bb24d5618dc8e615739498a31a97a06d51889eb3b586f44dd246d6e26258068e794f328e43fb8ff761fc7d36bcef68bde60c",
+    "passwordHash": "11bdad9f0c7f741e30f91d8052cb095c:5b75279be3803c6f350a673af3c93bead02194dcd177799c932213bf334815a09b2c00f6645efb7db9b0055d47dc774e014402d3f55803fd269fc93977134e28",
     "role": "admin",
     "active": true,
     "createdAt": "2025-01-05T09:00:00.000Z"
@@ -12,7 +12,7 @@
     "id": "usr_demo001",
     "email": "demo@boolk.dev",
     "name": "Danny Demo",
-    "passwordHash": "f55805548b5d489b452b59d45786813a:44f0c704f2d177301823177fa23d79584c3f223f355222b416632376338cc141c569187d140b033a54442e94593a27a3b4dc7183bf52c18e63bf7750b29280e2",
+    "passwordHash": "68d44793d011dec5c4425f538ef15894:195f0ce172c860c74b9ffa0519a8a10834732fd2420667a01934e64135e63d2f87d025abb55ba93f1a8eb4995039f46ecba1ef2cf46bbd3cd3c161c846bb8bab",
     "role": "user",
     "active": true,
     "createdAt": "2025-02-12T14:30:00.000Z"

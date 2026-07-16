@@ -175,6 +175,9 @@ export const listings = {
       sort,
       featured,
       activeOnly = true,
+      mode,
+      origin,
+      destination,
     } = query;
 
     let rows = listingsRepo.list();
@@ -184,13 +187,43 @@ export const listings = {
     if (typeof featured === "boolean")
       rows = rows.filter((l) => l.featured === featured);
 
-    if (q && q.trim()) {
-      const needle = q.trim().toLowerCase();
+    if (mode) rows = rows.filter((l) => l.transport?.mode === mode);
+
+    const originNeedle = origin?.trim().toLowerCase();
+    if (originNeedle) {
       rows = rows.filter((l) =>
-        [l.title, l.city, l.country, l.description].some((field) =>
-          field.toLowerCase().includes(needle),
+        [l.transport?.originCity, l.transport?.originCode].some((f) =>
+          f?.toLowerCase().includes(originNeedle),
         ),
       );
+    }
+
+    const destNeedle = destination?.trim().toLowerCase();
+    if (destNeedle) {
+      rows = rows.filter((l) =>
+        [l.transport?.destinationCity, l.transport?.destinationCode].some((f) =>
+          f?.toLowerCase().includes(destNeedle),
+        ),
+      );
+    }
+
+    if (q && q.trim()) {
+      const needle = q.trim().toLowerCase();
+      rows = rows.filter((l) => {
+        const fields = [l.title, l.city, l.country, l.description];
+        // For transport, also match route cities/codes and carrier.
+        if (l.type === "transport" && l.transport) {
+          const t = l.transport;
+          fields.push(
+            t.originCity,
+            t.originCode,
+            t.destinationCity,
+            t.destinationCode,
+            t.carrier,
+          );
+        }
+        return fields.some((field) => field.toLowerCase().includes(needle));
+      });
     }
 
     if (typeof minPrice === "number")
@@ -228,19 +261,66 @@ export const listings = {
 
 const bookingsRepo = makeRepo("bookings", "bkg");
 
+/**
+ * Normalises the Round 2 fields on read so callers can treat them as always
+ * present, even for older seed/runtime records that predate them.
+ */
+function withBookingDefaults(b: Booking): Booking {
+  return {
+    ...b,
+    currency: b.currency ?? "USD",
+    pointsRedeemed: b.pointsRedeemed ?? 0,
+    discountCents: b.discountCents ?? 0,
+    pointsEarned: b.pointsEarned ?? 0,
+  };
+}
+
 export const bookings = {
   ...bookingsRepo,
+  get(id: string): Booking | undefined {
+    const b = bookingsRepo.get(id);
+    return b ? withBookingDefaults(b) : undefined;
+  },
+  list(): Booking[] {
+    return bookingsRepo.list().map(withBookingDefaults);
+  },
   byUser(userId: string): Booking[] {
     return bookingsRepo
       .list()
       .filter((b) => b.userId === userId)
+      .map(withBookingDefaults)
       .sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
   },
   byListing(listingId: string): Booking[] {
-    return bookingsRepo.list().filter((b) => b.listingId === listingId);
+    return bookingsRepo
+      .list()
+      .filter((b) => b.listingId === listingId)
+      .map(withBookingDefaults);
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Points ledger
+// ---------------------------------------------------------------------------
+
+const pointsRepo = makeRepo("points", "pts");
+
+export const points = {
+  ...pointsRepo,
+  byUser(userId: string): PointsTransaction[] {
+    return pointsRepo
+      .list()
+      .filter((p) => p.userId === userId)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+  },
+  byBooking(bookingId: string): PointsTransaction[] {
+    return pointsRepo.list().filter((p) => p.bookingId === bookingId);
   },
 };
 

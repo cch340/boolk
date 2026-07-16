@@ -20,7 +20,7 @@ export interface BookingView {
   listingSlug: string;
   listingCity: string;
   listingImage: string;
-  listingType: "hotel" | "activity";
+  listingType: "hotel" | "activity" | "transport";
   cancellable: boolean;
   canReview: boolean;
 }

@@ -10,7 +10,11 @@
     "status": "confirmed",
     "guestName": "Danny Demo",
     "guestEmail": "demo@boolk.dev",
-    "createdAt": "2026-06-26T00:00:00.000Z"
+    "createdAt": "2026-06-26T00:00:00.000Z",
+    "currency": "USD",
+    "pointsRedeemed": 0,
+    "discountCents": 0,
+    "pointsEarned": 0
   },
   {
     "id": "bkg_02",
@@ -23,7 +27,11 @@
     "status": "confirmed",
     "guestName": "Danny Demo",
     "guestEmail": "demo@boolk.dev",
-    "createdAt": "2026-07-01T00:00:00.000Z"
+    "createdAt": "2026-07-01T00:00:00.000Z",
+    "currency": "USD",
+    "pointsRedeemed": 0,
+    "discountCents": 0,
+    "pointsEarned": 0
   },
   {
     "id": "bkg_03",
@@ -35,7 +43,11 @@
     "status": "confirmed",
     "guestName": "Danny Demo",
     "guestEmail": "demo@boolk.dev",
-    "createdAt": "2026-07-04T00:00:00.000Z"
+    "createdAt": "2026-07-04T00:00:00.000Z",
+    "currency": "USD",
+    "pointsRedeemed": 0,
+    "discountCents": 0,
+    "pointsEarned": 0
   },
   {
     "id": "bkg_04",
@@ -48,7 +60,11 @@
     "status": "completed",
     "guestName": "Danny Demo",
     "guestEmail": "demo@boolk.dev",
-    "createdAt": "2026-05-17T00:00:00.000Z"
+    "createdAt": "2026-05-17T00:00:00.000Z",
+    "currency": "USD",
+    "pointsRedeemed": 0,
+    "discountCents": 0,
+    "pointsEarned": 672
   },
   {
     "id": "bkg_05",
@@ -60,7 +76,11 @@
     "status": "completed",
     "guestName": "Danny Demo",
     "guestEmail": "demo@boolk.dev",
-    "createdAt": "2026-05-07T00:00:00.000Z"
+    "createdAt": "2026-05-07T00:00:00.000Z",
+    "currency": "USD",
+    "pointsRedeemed": 0,
+    "discountCents": 0,
+    "pointsEarned": 158
   },
   {
     "id": "bkg_06",
@@ -72,7 +92,11 @@
     "status": "completed",
     "guestName": "Danny Demo",
     "guestEmail": "demo@boolk.dev",
-    "createdAt": "2026-05-09T00:00:00.000Z"
+    "createdAt": "2026-05-09T00:00:00.000Z",
+    "currency": "USD",
+    "pointsRedeemed": 0,
+    "discountCents": 0,
+    "pointsEarned": 356
   },
   {
     "id": "bkg_07",
@@ -85,7 +109,11 @@
     "status": "pending",
     "guestName": "Danny Demo",
     "guestEmail": "demo@boolk.dev",
-    "createdAt": "2026-07-13T00:00:00.000Z"
+    "createdAt": "2026-07-13T00:00:00.000Z",
+    "currency": "USD",
+    "pointsRedeemed": 0,
+    "discountCents": 0,
+    "pointsEarned": 0
   },
   {
     "id": "bkg_08",
@@ -97,7 +125,11 @@
     "status": "cancelled",
     "guestName": "Danny Demo",
     "guestEmail": "demo@boolk.dev",
-    "createdAt": "2026-06-21T00:00:00.000Z"
+    "createdAt": "2026-06-21T00:00:00.000Z",
+    "currency": "USD",
+    "pointsRedeemed": 0,
+    "discountCents": 0,
+    "pointsEarned": 0
   },
   {
     "id": "bkg_09",
@@ -110,7 +142,11 @@
     "status": "refunded",
     "guestName": "Danny Demo",
     "guestEmail": "demo@boolk.dev",
-    "createdAt": "2026-04-12T00:00:00.000Z"
+    "createdAt": "2026-04-12T00:00:00.000Z",
+    "currency": "USD",
+    "pointsRedeemed": 0,
+    "discountCents": 0,
+    "pointsEarned": 0
   },
   {
     "id": "bkg_10",
@@ -122,6 +158,10 @@
     "status": "completed",
     "guestName": "Danny Demo",
     "guestEmail": "demo@boolk.dev",
-    "createdAt": "2026-05-22T00:00:00.000Z"
+    "createdAt": "2026-05-22T00:00:00.000Z",
+    "currency": "USD",
+    "pointsRedeemed": 0,
+    "discountCents": 0,
+    "pointsEarned": 252
   }
 ]

@@ -138,6 +138,84 @@ function makeListing(def, type, seq) {
 hotelDefs.forEach((d, i) => listings.push(makeListing(d, "hotel", i)));
 activityDefs.forEach((d, i) => listings.push(makeListing(d, "activity", i)));
 
+// ---------------------------------------------------------- transport
+const transportHighlights = [
+  "Instant confirmation",
+  "Mobile e-ticket",
+  "Free cancellation up to 24h",
+  "Reserved seating",
+  "English-speaking support",
+];
+
+// [mode, originCity, originCode, destCity, destCode, carrier, serviceCode,
+//  dep, arr, durationMinutes, title, description, priceCents, rating,
+//  reviewCount, featured, maxGuests, country]
+const transportDefs = [
+  ["flight", "Tokyo", "HND", "Singapore", "SIN", "ANA", "NH843", "10:55", "17:25", 450,
+    "Tokyo → Singapore Direct Flight", "Nonstop widebody service from Haneda to Changi with checked baggage and in-flight meals included.", 32900, 4.6, 128, true, 9, "Japan"],
+  ["flight", "Tokyo", "NRT", "Bangkok", "BKK", "Thai Airways", "TG641", "09:15", "14:05", 390,
+    "Tokyo → Bangkok Direct Flight", "Comfortable daytime flight from Narita to Suvarnabhumi with generous legroom and hot meals.", 28500, 4.5, 96, false, 9, "Japan"],
+  ["flight", "Singapore", "SIN", "Bali", "DPS", "Singapore Airlines", "SQ938", "08:20", "11:00", 160,
+    "Singapore → Bali Direct Flight", "Morning departure from Changi to Ngurah Rai — the fastest way to start your Bali escape.", 15900, 4.7, 143, true, 9, "Singapore"],
+  ["train", "Tokyo", "TYO", "Kyoto", "KYO", "JR Central", "NZM17", "09:00", "11:15", 135,
+    "Tokyo → Kyoto Shinkansen", "Reserved seat on the Nozomi bullet train gliding to Kyoto in just over two hours at 285 km/h.", 11200, 4.9, 210, true, 5, "Japan"],
+  ["train", "Paris", "PAR", "Rome", "ROM", "Euronight", "EN220", "19:15", "09:40", 865,
+    "Paris → Rome Overnight Train", "Sleep your way south in a private couchette, waking to the Italian countryside near Rome.", 18900, 4.3, 78, false, 4, "France"],
+  ["ferry", "Bali", "SNR", "Gili Trawangan", "GIL", "Blue Water Express", "BW09", "08:00", "10:30", 150,
+    "Bali → Gili Trawangan Fast Boat", "Air-conditioned fast ferry from Sanur to the Gili Islands with hotel-area pickup available.", 5900, 4.4, 187, true, 6, "Indonesia"],
+  ["ferry", "Singapore", "HFC", "Bintan", "BTN", "Bintan Resort Ferries", "BRF14", "10:35", "11:35", 60,
+    "Singapore → Bintan Ferry", "Quick crossing from HarbourFront to Bintan's resort belt — customs and seating included.", 4800, 4.3, 92, false, 8, "Singapore"],
+  ["transfer", "Bangkok", "BKK", "Bangkok City", "CBD", "Bangkok Premier Transfers", "PVT01", "On request", "On request", 60,
+    "Bangkok Airport Private Transfer", "Private air-conditioned car from Suvarnabhumi to your hotel with a meet-and-greet driver.", 3200, 4.6, 154, false, 4, "Thailand"],
+  ["transfer", "Singapore", "SIN", "Singapore City", "CBD", "Changi City Transfers", "CT02", "On request", "On request", 30,
+    "Changi Airport Private Transfer", "Door-to-door private sedan from Changi Airport to any central Singapore address.", 3800, 4.7, 121, true, 4, "Singapore"],
+  ["transfer", "Tokyo", "HND", "Tokyo City", "CBD", "Airport Limousine", "LB88", "On request", "On request", 55,
+    "Haneda Airport Limousine Bus", "Comfortable coach service from Haneda directly to major Tokyo hotels and stations.", 1800, 4.5, 203, false, 45, "Japan"],
+];
+
+function makeTransport(def, seq) {
+  const [mode, originCity, originCode, destinationCity, destinationCode, carrier,
+    serviceCode, departureTime, arrivalTime, durationMinutes, title, description,
+    price, rating, reviewCount, featured, maxGuests, country] = def;
+  const slug = slugify(title);
+  createdSeq += 1;
+  const created = iso(new Date("2025-01-10T00:00:00Z").getTime() + createdSeq * 86400000);
+  return {
+    id: `lst_t${String(seq + 1).padStart(2, "0")}`,
+    type: "transport",
+    title,
+    slug,
+    city: originCity, // mirror originCity for search compatibility
+    country,
+    description,
+    images: images(slug),
+    pricePerUnitCents: price,
+    unitLabel: "person",
+    rating,
+    reviewCount,
+    amenities: [],
+    highlights: pick(transportHighlights, 4, seq),
+    maxGuests,
+    featured,
+    active: true,
+    createdAt: created,
+    transport: {
+      mode,
+      originCity,
+      originCode,
+      destinationCity,
+      destinationCode,
+      carrier,
+      serviceCode,
+      departureTime,
+      arrivalTime,
+      durationMinutes,
+    },
+  };
+}
+
+transportDefs.forEach((d, i) => listings.push(makeTransport(d, i)));
+
 // ------------------------------------------------------------- bookings
 const byId = (id) => listings.find((l) => l.id === id);
 const addDays = (base, days) => iso(new Date(base).getTime() + days * 86400000);
@@ -167,6 +245,7 @@ const bookings = bookingDefs.map((d, i) => {
   const checkOut = isHotel ? addDays(checkIn, nightsN) : undefined;
   const units = isHotel ? nights(checkIn, checkOut) : guests;
   const totalCents = l.pricePerUnitCents * units;
+  const pointsEarned = status === "completed" ? Math.floor(totalCents / 100) : 0;
   return {
     id: `bkg_${String(i + 1).padStart(2, "0")}`,
     userId: "usr_demo001",
@@ -179,6 +258,11 @@ const bookings = bookingDefs.map((d, i) => {
     guestName: "Danny Demo",
     guestEmail: "demo@boolk.dev",
     createdAt: addDays("2026-07-16", offset),
+    // Round 2 fields — records stay USD; no redemptions in the seed set.
+    currency: "USD",
+    pointsRedeemed: 0,
+    discountCents: 0,
+    pointsEarned,
   };
 });
 
@@ -216,6 +300,42 @@ const reviews = reviewDefs.map((d, i) => {
   };
 });
 
+// --------------------------------------------------------------- points
+// Ledger for the demo user: an 'earn' entry per completed booking (matching
+// each booking's pointsEarned), plus a welcome bonus, so the balance is
+// meaningful. Balance = sum of deltas.
+const points = [];
+let ptsSeq = 0;
+function addPoints(entry) {
+  ptsSeq += 1;
+  points.push({ id: `pts_${String(ptsSeq).padStart(2, "0")}`, ...entry });
+}
+
+// Welcome bonus.
+addPoints({
+  userId: "usr_demo001",
+  delta: 500,
+  reason: "admin-adjust",
+  note: "Welcome bonus",
+  createdAt: addDays("2026-07-16", -100),
+});
+
+// Earn entries for completed bookings.
+bookings
+  .filter((b) => b.status === "completed" && b.pointsEarned > 0)
+  .forEach((b) => {
+    addPoints({
+      userId: b.userId,
+      bookingId: b.id,
+      delta: b.pointsEarned,
+      reason: "earn",
+      note: `Earned ${b.pointsEarned} points for booking ${b.id}`,
+      createdAt: addDays(b.checkOut ?? b.checkIn, 1),
+    });
+  });
+
+const pointsBalance = points.reduce((s, p) => s + p.delta, 0);
+
 // ---------------------------------------------------------------- write
 fs.mkdirSync(SEED_DIR, { recursive: true });
 const write = (name, data) =>
@@ -225,7 +345,8 @@ write("users", users);
 write("listings", listings);
 write("bookings", bookings);
 write("reviews", reviews);
+write("points", points);
 
 console.log(
-  `Seed written: ${users.length} users, ${listings.length} listings, ${bookings.length} bookings, ${reviews.length} reviews`,
+  `Seed written: ${users.length} users, ${listings.length} listings, ${bookings.length} bookings, ${reviews.length} reviews, ${points.length} points entries (demo balance ${pointsBalance})`,
 );
