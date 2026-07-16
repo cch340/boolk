@@ -1,6 +1,6 @@
 # Boolk — Travel Booking Platform
 
-A Klook/Agoda-style travel booking system: a user-facing web app for browsing and booking hotels & activities, and an admin portal for managing the marketplace. Both surfaces are fully responsive (mobile-first, desktop-enhanced).
+A Klook/Agoda-style travel booking system: a user-facing web app for browsing and booking hotels, activities, and transport (flights, trains, ferries, transfers), and an admin portal for managing the marketplace. Multi-currency (8 currencies), multi-language (English / 中文 / 日本語), and a member points programme. Both surfaces are fully responsive (mobile-first, desktop-enhanced).
 
 ## Quick start
 
@@ -26,7 +26,10 @@ npm start
 ## Surfaces
 
 **User app** (`/`)
-- Home with destination search (dates, guests, Hotels/Activities tabs), featured listings, popular destinations
+- Home with destination search (dates, guests, Hotels/Activities/Transport tabs), featured listings, popular destinations
+- Transport search by origin/destination with route cards (times, carrier, duration) and per-passenger booking
+- Language (EN/中文/日本語) and currency (USD, EUR, GBP, JPY, SGD, THB, MYR, IDR) pickers in the header; prices convert for display, charges stay in USD
+- Member points: earn 1 pt per $1 on completed bookings, redeem 100 pts = $1 at checkout (up to 50% of the order); balance + ledger on the bookings page
 - `/search` — filterable results (type, price, rating, sort); filter sidebar on desktop, sheet on mobile
 - `/listing/[slug]` — gallery, amenities, reviews, live-priced booking widget (sticky card on desktop, bottom bar on mobile)
 - `/checkout/[listingId]` — guest details + mock payment (demo only, no real charge)
@@ -35,9 +38,9 @@ npm start
 
 **Admin portal** (`/admin`, admin role required)
 - Dashboard: revenue/bookings/listings/users KPIs, status breakdown, recent bookings
-- Listings CRUD with activation and delete safeguards
-- Bookings with validated status transitions (confirm → complete / cancel → refund)
-- User management (activate/deactivate) and review moderation
+- Listings CRUD with activation and delete safeguards, including transport routes/schedules
+- Bookings with validated status transitions (confirm → complete / cancel → refund) that automatically award, revoke, or refund member points
+- User management (activate/deactivate, points balance + manual adjustments with audit notes) and review moderation
 - Sidebar layout on desktop, drawer navigation on mobile
 
 ## Tech

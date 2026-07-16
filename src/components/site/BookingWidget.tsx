@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
-import { formatPrice, nightsBetween } from "@/lib/format";
+import { nightsBetween } from "@/lib/format";
+import { formatMoney, type CurrencyCode } from "@/lib/currency";
+import { getDictionary, t, type Locale, type MessageKey } from "@/lib/i18n";
 import type { Listing } from "@/lib/types";
 
 function todayISO(offsetDays = 0): string {
@@ -12,20 +14,34 @@ function todayISO(offsetDays = 0): string {
   return d.toISOString().slice(0, 10);
 }
 
+const inputClass =
+  "h-11 w-full rounded-xl border border-slate-300 px-3.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30";
+
 export function BookingWidget({
   listing,
   isLoggedIn,
+  locale,
+  currency,
 }: {
   listing: Listing;
   isLoggedIn: boolean;
+  locale: Locale;
+  currency: CurrencyCode;
 }) {
   const router = useRouter();
+  const dict = getDictionary(locale);
   const isHotel = listing.type === "hotel";
+  const isTransport = listing.type === "transport";
 
   const [checkIn, setCheckIn] = useState(() => todayISO(1));
   const [checkOut, setCheckOut] = useState(() => todayISO(3));
-  const [guests, setGuests] = useState(2);
+  const [guests, setGuests] = useState(isTransport ? 1 : 2);
   const [error, setError] = useState<string | null>(null);
+
+  const priceKey: MessageKey =
+    listing.unitLabel === "night"
+      ? "listing.pricePerNight"
+      : "listing.pricePerPerson";
 
   const { units, unitWord, total, valid } = useMemo(() => {
     if (isHotel) {
@@ -34,30 +50,43 @@ export function BookingWidget({
       const nights = validDates ? nightsBetween(checkIn, checkOut) : 0;
       return {
         units: nights,
-        unitWord: nights === 1 ? "night" : "nights",
+        unitWord: t(dict, nights === 1 ? "common.night" : "common.nights"),
         total: nights * listing.pricePerUnitCents,
         valid: validDates,
       };
     }
+    if (isTransport) {
+      return {
+        units: guests,
+        unitWord: t(
+          dict,
+          guests === 1 ? "transport.passenger" : "transport.passengersLabel",
+        ),
+        total: guests * listing.pricePerUnitCents,
+        valid: !!checkIn && guests >= 1,
+      };
+    }
     return {
       units: guests,
-      unitWord: guests === 1 ? "person" : "people",
+      unitWord: t(dict, guests === 1 ? "common.person" : "common.people"),
       total: guests * listing.pricePerUnitCents,
       valid: !!checkIn && guests >= 1,
     };
-  }, [isHotel, checkIn, checkOut, guests, listing.pricePerUnitCents]);
+  }, [isHotel, isTransport, checkIn, checkOut, guests, listing.pricePerUnitCents, dict]);
 
   function book() {
     setError(null);
     if (guests > listing.maxGuests) {
-      setError(`This listing allows at most ${listing.maxGuests} guests.`);
+      setError(
+        t(dict, isTransport ? "transport.err.maxPassengers" : "listing.err.maxGuests", {
+          count: listing.maxGuests,
+        }),
+      );
       return;
     }
     if (!valid) {
       setError(
-        isHotel
-          ? "Please choose a valid check-in and check-out date."
-          : "Please choose a date.",
+        t(dict, isHotel ? "listing.err.dates" : "listing.err.date"),
       );
       return;
     }
@@ -73,24 +102,25 @@ export function BookingWidget({
     router.push(target);
   }
 
-  const inputClass =
-    "h-11 w-full rounded-xl border border-slate-300 px-3.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30";
+  const dateLabel = isHotel
+    ? t(dict, "bookings.checkIn")
+    : t(dict, "bookings.date");
+  const countLabel = isTransport
+    ? t(dict, "transport.passengersMax", { count: listing.maxGuests })
+    : t(dict, "listing.guestsMax", { count: listing.maxGuests });
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
-      <div className="flex items-baseline gap-1">
-        <span className="text-2xl font-bold text-slate-900">
-          {formatPrice(listing.pricePerUnitCents)}
-        </span>
-        <span className="text-sm text-slate-500">
-          / {listing.unitLabel === "night" ? "night" : "person"}
-        </span>
+      <div className="text-2xl font-bold text-slate-900">
+        {t(dict, priceKey, {
+          price: formatMoney(listing.pricePerUnitCents, currency),
+        })}
       </div>
 
       <div className="mt-4 space-y-3">
         <div>
           <label className="mb-1.5 block text-xs font-medium text-slate-500">
-            {isHotel ? "Check in" : "Date"}
+            {dateLabel}
           </label>
           <input
             type="date"
@@ -103,7 +133,7 @@ export function BookingWidget({
         {isHotel && (
           <div>
             <label className="mb-1.5 block text-xs font-medium text-slate-500">
-              Check out
+              {t(dict, "bookings.checkOut")}
             </label>
             <input
               type="date"
@@ -116,7 +146,7 @@ export function BookingWidget({
         )}
         <div>
           <label className="mb-1.5 block text-xs font-medium text-slate-500">
-            Guests (max {listing.maxGuests})
+            {countLabel}
           </label>
           <input
             type="number"
@@ -140,13 +170,14 @@ export function BookingWidget({
         <div className="mt-4 space-y-1 border-t border-slate-100 pt-4 text-sm">
           <div className="flex justify-between text-slate-600">
             <span>
-              {formatPrice(listing.pricePerUnitCents)} × {units} {unitWord}
+              {formatMoney(listing.pricePerUnitCents, currency)} × {units}{" "}
+              {unitWord}
             </span>
-            <span>{formatPrice(total)}</span>
+            <span>{formatMoney(total, currency)}</span>
           </div>
           <div className="flex justify-between pt-1 text-base font-semibold text-slate-900">
-            <span>Total</span>
-            <span>{formatPrice(total)}</span>
+            <span>{t(dict, "listing.total")}</span>
+            <span>{formatMoney(total, currency)}</span>
           </div>
         </div>
       )}
@@ -154,10 +185,10 @@ export function BookingWidget({
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
       <Button fullWidth size="lg" className="mt-4" onClick={book}>
-        Book now
+        {t(dict, "listing.bookNow")}
       </Button>
       <p className="mt-2 text-center text-xs text-slate-400">
-        You won&apos;t be charged yet — demo checkout.
+        {t(dict, "listing.demoNote")}
       </p>
     </div>
   );

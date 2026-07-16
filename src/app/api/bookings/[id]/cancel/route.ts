@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { bookings } from "@/lib/db";
 import { requireUser, AuthError } from "@/lib/auth";
+import { refundRedemption } from "@/lib/points";
 
 export async function POST(
   _req: Request,
@@ -23,6 +24,8 @@ export async function POST(
     }
 
     const updated = bookings.update(id, { status: "cancelled" });
+    // Return any points spent on this booking (idempotent).
+    if (updated) refundRedemption(updated);
     return NextResponse.json({ booking: updated });
   } catch (err) {
     if (err instanceof AuthError) {

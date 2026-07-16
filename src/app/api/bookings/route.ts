@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { bookings, listings } from "@/lib/db";
 import { requireUser, AuthError } from "@/lib/auth";
 import { nightsBetween } from "@/lib/format";
+import { redeemForBooking } from "@/lib/points";
+import { isCurrencyCode, DEFAULT_CURRENCY } from "@/lib/currency";
 import type { Booking } from "@/lib/types";
 
 export async function GET(): Promise<NextResponse> {
@@ -42,6 +44,8 @@ export async function POST(req: Request): Promise<NextResponse> {
       guests,
       guestName,
       guestEmail,
+      currency,
+      pointsRedeemed,
     } = (body ?? {}) as {
       listingId?: string;
       checkIn?: string;
@@ -49,6 +53,8 @@ export async function POST(req: Request): Promise<NextResponse> {
       guests?: number;
       guestName?: string;
       guestEmail?: string;
+      currency?: string;
+      pointsRedeemed?: number;
     };
 
     if (!listingId) {
@@ -113,13 +119,20 @@ export async function POST(req: Request): Promise<NextResponse> {
       normalizedCheckOut = undefined;
     }
 
+    const grossCents = totalCents;
+    const displayCurrency = isCurrencyCode(currency)
+      ? currency
+      : DEFAULT_CURRENCY;
+
+    // Create the booking first at the gross total; redemption (which needs the
+    // booking id) is applied immediately after.
     const created = bookings.create({
       userId: user.id,
       listingId: listing.id,
       checkIn,
       checkOut: normalizedCheckOut,
       guests: guestCount,
-      totalCents,
+      totalCents: grossCents,
       status: "confirmed",
       guestName:
         typeof guestName === "string" && guestName.trim()
@@ -129,7 +142,43 @@ export async function POST(req: Request): Promise<NextResponse> {
         typeof guestEmail === "string" && guestEmail.trim()
           ? guestEmail.trim()
           : user.email,
+      currency: displayCurrency,
+      pointsRedeemed: 0,
+      discountCents: 0,
+      pointsEarned: 0,
     } satisfies Omit<Booking, "id" | "createdAt">);
+
+    const redeem =
+      typeof pointsRedeemed === "number" ? Math.floor(pointsRedeemed) : 0;
+
+    if (redeem > 0) {
+      try {
+        const { discountCents } = redeemForBooking(
+          user.id,
+          created.id,
+          redeem,
+          grossCents,
+        );
+        const updated = bookings.update(created.id, {
+          pointsRedeemed: redeem,
+          discountCents,
+          totalCents: Math.max(0, grossCents - discountCents),
+        });
+        return NextResponse.json({ booking: updated ?? created }, { status: 201 });
+      } catch (redeemErr) {
+        // Roll back the just-created booking so no orphaned record remains.
+        bookings.remove(created.id);
+        return NextResponse.json(
+          {
+            error:
+              redeemErr instanceof Error
+                ? redeemErr.message
+                : "Could not redeem points",
+          },
+          { status: 400 },
+        );
+      }
+    }
 
     return NextResponse.json({ booking: created }, { status: 201 });
   } catch (err) {
