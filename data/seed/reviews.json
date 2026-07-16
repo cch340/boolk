@@ -1,0 +1,152 @@
+[
+  {
+    "id": "rev_01",
+    "listingId": "lst_h07",
+    "userId": "usr_demo001",
+    "bookingId": "bkg_04",
+    "rating": 5,
+    "text": "The private pool villa was a dream — waking up to the jungle and rice fields was unforgettable. Staff went above and beyond.",
+    "status": "visible",
+    "createdAt": "2026-05-27T00:00:00.000Z"
+  },
+  {
+    "id": "rev_02",
+    "listingId": "lst_a09",
+    "userId": "usr_demo001",
+    "bookingId": "bkg_05",
+    "rating": 5,
+    "text": "Our guide made the Louvre come alive. We'd have been lost without her and skipping the line saved us hours.",
+    "status": "visible",
+    "createdAt": "2026-05-15T00:00:00.000Z"
+  },
+  {
+    "id": "rev_03",
+    "listingId": "lst_a11",
+    "userId": "usr_demo001",
+    "bookingId": "bkg_06",
+    "rating": 4,
+    "text": "Incredible access to the arena floor. Slightly rushed at the end but genuinely a highlight of Rome.",
+    "status": "visible",
+    "createdAt": "2026-05-17T00:00:00.000Z"
+  },
+  {
+    "id": "rev_04",
+    "listingId": "lst_a12",
+    "userId": "usr_demo001",
+    "bookingId": "bkg_10",
+    "rating": 5,
+    "text": "Early access to the Sistine Chapel with barely anyone there was magical. Highly recommend booking the first slot.",
+    "status": "visible",
+    "createdAt": "2026-05-29T00:00:00.000Z"
+  },
+  {
+    "id": "rev_05",
+    "listingId": "lst_h01",
+    "userId": "usr_demo001",
+    "bookingId": "",
+    "rating": 5,
+    "text": "Best skyline views in Tokyo. Spotless rooms and the location by Shinjuku station is unbeatable.",
+    "status": "visible",
+    "createdAt": "2026-06-16T00:00:00.000Z"
+  },
+  {
+    "id": "rev_06",
+    "listingId": "lst_h05",
+    "userId": "usr_demo001",
+    "bookingId": "",
+    "rating": 5,
+    "text": "Marina Bay lived up to the hype — the rooftop infinity pool alone is worth the stay.",
+    "status": "visible",
+    "createdAt": "2026-06-06T00:00:00.000Z"
+  },
+  {
+    "id": "rev_07",
+    "listingId": "lst_a01",
+    "userId": "usr_demo001",
+    "bookingId": "",
+    "rating": 5,
+    "text": "The Tsukiji food tour was the tastiest morning of our trip. So much variety and history.",
+    "status": "visible",
+    "createdAt": "2026-06-11T00:00:00.000Z"
+  },
+  {
+    "id": "rev_08",
+    "listingId": "lst_a07",
+    "userId": "usr_demo001",
+    "bookingId": "",
+    "rating": 4,
+    "text": "Beautiful cycling route through the terraces. Bring sunscreen — it gets hot fast!",
+    "status": "visible",
+    "createdAt": "2026-06-01T00:00:00.000Z"
+  },
+  {
+    "id": "rev_09",
+    "listingId": "lst_h03",
+    "userId": "usr_demo001",
+    "bookingId": "",
+    "rating": 4,
+    "text": "Gorgeous riverside property. Breakfast spread was enormous. Rooms could use a small refresh.",
+    "status": "visible",
+    "createdAt": "2026-06-24T00:00:00.000Z"
+  },
+  {
+    "id": "rev_10",
+    "listingId": "lst_a08",
+    "userId": "usr_demo001",
+    "bookingId": "",
+    "rating": 5,
+    "text": "Snorkeling with manta rays off Nusa Penida was surreal. The crew were fantastic and safe.",
+    "status": "visible",
+    "createdAt": "2026-06-28T00:00:00.000Z"
+  },
+  {
+    "id": "rev_11",
+    "listingId": "lst_h09",
+    "userId": "usr_demo001",
+    "bookingId": "",
+    "rating": 5,
+    "text": "Impeccable little hotel in the Marais. Perfect base for wandering Paris on foot.",
+    "status": "visible",
+    "createdAt": "2026-05-22T00:00:00.000Z"
+  },
+  {
+    "id": "rev_12",
+    "listingId": "lst_a02",
+    "userId": "usr_demo001",
+    "bookingId": "",
+    "rating": 4,
+    "text": "Long but rewarding day trip to Fuji. The lake cruise views were stunning on a clear day.",
+    "status": "visible",
+    "createdAt": "2026-06-18T00:00:00.000Z"
+  },
+  {
+    "id": "rev_13",
+    "listingId": "lst_h11",
+    "userId": "usr_demo001",
+    "bookingId": "",
+    "rating": 4,
+    "text": "Charming Trastevere hideaway. The rooftop terrace at sunset is not to be missed.",
+    "status": "visible",
+    "createdAt": "2026-06-13T00:00:00.000Z"
+  },
+  {
+    "id": "rev_14",
+    "listingId": "lst_a04",
+    "userId": "usr_demo001",
+    "bookingId": "",
+    "rating": 5,
+    "text": "Learned to cook four dishes I've since made at home. The chef was hilarious and patient.",
+    "status": "visible",
+    "createdAt": "2026-06-20T00:00:00.000Z"
+  },
+  {
+    "id": "rev_15",
+    "listingId": "lst_h07",
+    "userId": "usr_demo001",
+    "bookingId": "",
+    "rating": 5,
+    "text": "Came back a second time — still the most peaceful place we've ever stayed in Bali.",
+    "status": "visible",
+    "createdAt": "2026-07-04T00:00:00.000Z"
+  }
+]
